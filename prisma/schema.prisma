@@ -7,15 +7,37 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
-    url      = env("DATABASE_URL")
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")       // transaction pooler — used by the app
+    directUrl = env("DIRECT_URL")         // session pooler — used by prisma db push/migrate
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Story {
+    id                String      @id @default(cuid())
+    tripContext       String?
+    status            StoryStatus @default(PENDING)
+    uploadedImageUrls String[]
+    createdAt         DateTime    @default(now())
+    updatedAt         DateTime    @updatedAt
+    pages             StoryPage[]
+}
 
-    @@index([name])
+enum StoryStatus {
+    PENDING
+    GENERATING
+    COMPLETE
+    FAILED
+}
+
+model StoryPage {
+    id                 String   @id @default(cuid())
+    storyId            String
+    story              Story    @relation(fields: [storyId], references: [id])
+    pageNumber         Int
+    narrative          String
+    illustrationPrompt String
+    illustrationUrl    String?
+    createdAt          DateTime @default(now())
+
+    @@index([storyId])
 }

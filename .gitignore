@@ -42,5 +42,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
+# generated prisma client (rebuilt on pnpm install via postinstall)
+/generated/
+
+# pnpm
+.pnpm-build-approvals.json
+
 # idea files
 .idea

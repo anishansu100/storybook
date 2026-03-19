@@ -1,29 +1,74 @@
-# Create T3 App
+# Storybook
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+A web app that turns family trip photos into AI-generated children's storybooks. Parents upload photos, and the app uses Claude to write a narrative and Flux to generate children's book-style illustrations, laid out in a page-flip book UI.
 
-## What's next? How do I make an app with this?
+## Stack
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- **Next.js 15** (App Router) + **tRPC v11** + **Prisma** + **Tailwind CSS v4**
+- **Supabase** — PostgreSQL database + file storage
+- **Anthropic Claude** — narrative generation from photos (vision)
+- **fal.ai Flux 1.1 Pro** — children's book illustration generation
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Setup
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+1. Clone the repo and install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-## Learn More
+2. Copy `.env.example` to `.env` and fill in all values (see below)
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+3. Push the database schema:
+   ```bash
+   pnpm db:push
+   ```
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+4. Start the dev server:
+   ```bash
+   pnpm dev
+   ```
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+## Environment variables
 
-## How do I deploy this?
+See `.env.example` for the full list. You need:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+| Variable | Where to get it |
+|---|---|
+| `DATABASE_URL` | Supabase → Settings → Database → Connection Pooling → **Transaction** mode (port 6543) — append `?pgbouncer=true` |
+| `DIRECT_URL` | Same page, **Session** mode (port 5432) — used by Prisma migrations only |
+| `SUPABASE_URL` | Supabase → Settings → API → Project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → service_role key |
+| `NEXT_PUBLIC_SUPABASE_URL` | Same as `SUPABASE_URL` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API → anon key |
+| `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys |
+| `FAL_API_KEY` | fal.ai → Dashboard → API Keys |
+
+### Supabase storage
+
+Create a public bucket named `storybook-uploads` in Supabase → Storage.
+
+## Project structure
+
+```
+src/
+  app/
+    create/           # Upload form page
+    story/[id]/       # Book viewer page
+    api/upload/       # Image upload + HEIC→JPEG conversion
+    _components/      # UploadForm, BookViewer
+  server/
+    api/routers/      # tRPC routers (story: create, getById)
+    services/
+      imageGen/       # Swappable image generation strategy (flux today, IP-Adapter/LoRA later)
+      narrative.ts    # Claude vision → story narrative + illustration prompts
+    storage.ts        # Supabase Storage helpers
+docs/
+  ai/                 # AI-generated plan docs for each feature
+```
+
+## Roadmap
+
+- **Phase 1** ✅ — Upload photos → Claude narrative → Flux illustrations → book viewer
+- **Phase 2** — Face consistency via IP-Adapter (pass reference photos to Flux)
+- **Phase 3** — LoRA fine-tuning per person if IP-Adapter quality isn't sufficient
+- **Phase 4** — Auth, accounts, download PDF, order physical book + payment
