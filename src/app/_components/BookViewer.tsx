@@ -1,5 +1,13 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  ShoppingCart,
+} from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -16,67 +24,121 @@ interface BookViewerProps {
 export function BookViewer({ pages }: BookViewerProps) {
   const [currentPage, setCurrentPage] = useState(0);
 
-  if (!pages.length) return <p>No pages found.</p>;
+  if (!pages.length)
+    return <p className="text-muted-foreground">No pages found.</p>;
 
   const page = pages[currentPage]!;
 
   return (
-    <div>
-      <p style={{ color: "#888", marginBottom: 8 }}>
-        Page {currentPage + 1} of {pages.length}
-      </p>
+    <div className="flex flex-col items-center gap-8 w-full max-w-4xl mx-auto">
+      {/* Book spread */}
+      <div className="relative w-full aspect-[16/10] sm:aspect-[2/1] bg-[#fdfbf7] rounded-sm shadow-2xl flex overflow-hidden border border-[#e3dcd2]">
+        {/* Binding shadow */}
+        <div className="absolute inset-y-0 left-1/2 w-8 -ml-4 bg-gradient-to-r from-transparent via-black/5 to-transparent z-20 pointer-events-none mix-blend-multiply" />
 
-      {/* Book spread: left = narrative, right = illustration */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 32,
-          border: "1px solid #ccc",
-          padding: 32,
-          minHeight: 400,
-          background: "#fffdf7",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <p style={{ fontSize: 20, lineHeight: 1.7 }}>{page.narrative}</p>
+        {/* Left page — narrative */}
+        <div className="flex-1 p-8 sm:p-12 flex flex-col justify-center items-center relative bg-[#fdfbf7]">
+          <div className="absolute bottom-6 left-8 text-muted-foreground/40 text-xs font-mono">
+            {currentPage * 2 + 1}
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={`text-${currentPage}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="text-lg sm:text-2xl leading-relaxed text-center text-foreground/80 z-10"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              {page.narrative}
+            </motion.p>
+          </AnimatePresence>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {page.illustrationUrl ? (
-            <Image
-              src={page.illustrationUrl}
-              alt={`Illustration for page ${page.pageNumber}`}
-              width={480}
-              height={360}
-              style={{ maxWidth: "100%", height: "auto", objectFit: "contain" }}
-            />
-          ) : (
-            <p style={{ color: "#aaa" }}>Illustration not available</p>
-          )}
+        {/* Right page — illustration */}
+        <div className="flex-1 relative bg-white overflow-hidden">
+          <div className="absolute bottom-6 right-8 text-white/80 drop-shadow-md text-xs font-mono z-10">
+            {currentPage * 2 + 2}
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`img-${currentPage}`}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+              className="absolute inset-0"
+            >
+              {page.illustrationUrl ? (
+                <>
+                  <Image
+                    src={page.illustrationUrl}
+                    alt={`Illustration for page ${page.pageNumber}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground/40 text-sm">
+                  Illustration not available
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Navigation */}
-      <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
+      <div className="flex items-center gap-6">
         <button
           onClick={() => setCurrentPage((p) => p - 1)}
           disabled={currentPage === 0}
+          className="w-12 h-12 rounded-full border border-border flex items-center justify-center hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label="Previous page"
         >
-          ← Previous
+          <ChevronLeft className="w-6 h-6" />
         </button>
+        <span className="font-mono text-sm text-muted-foreground">
+          Page {currentPage + 1} of {pages.length}
+        </span>
         <button
           onClick={() => setCurrentPage((p) => p + 1)}
           disabled={currentPage === pages.length - 1}
+          className="w-12 h-12 rounded-full border border-border flex items-center justify-center hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label="Next page"
         >
-          Next →
+          <ChevronRight className="w-6 h-6" />
         </button>
       </div>
 
-      {/* Placeholder actions */}
-      <div style={{ marginTop: 32, display: "flex", gap: 12 }}>
-        <button disabled title="Coming soon">Download PDF</button>
-        <button disabled title="Coming soon">Order physical book</button>
+      {/* Action buttons — Phase 4 */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button
+          disabled
+          title="Coming soon"
+          className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg bg-secondary text-secondary-foreground shadow-lg opacity-60 cursor-not-allowed"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          Order Hardcover ($29)
+        </button>
+        <button
+          disabled
+          title="Coming soon"
+          className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg border border-primary/20 text-foreground opacity-60 cursor-not-allowed"
+        >
+          <Download className="w-5 h-5" />
+          Download PDF ($9)
+        </button>
+        <button
+          disabled
+          title="Coming soon"
+          className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg border border-accent/20 text-foreground opacity-60 cursor-not-allowed"
+        >
+          <BookOpen className="w-5 h-5" />
+          Share Story
+        </button>
       </div>
     </div>
   );

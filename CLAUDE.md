@@ -58,16 +58,21 @@ See `.env.example` for all required environment variables.
 
 Children's storybook generator: **Next.js 15 App Router + tRPC v11 + Prisma + Supabase + Claude + Flux**.
 
+App name: **TripTales**. Design system: Nunito (body) + Fredoka (headings), sky-blue/yellow/coral palette (HSL CSS vars in `globals.css`).
+
 ### Generation flow
 
 ```
-1. User uploads photos → /api/upload → HEIC files converted to JPEG → Supabase Storage
-2. story.create tRPC mutation:
+1. User drops photos on home page (/) → clicks "Create Magic Story"
+2. UploadForm POSTs to /api/upload → HEIC→JPEG conversion → Supabase Storage → returns URLs
+3. story.create tRPC mutation:
    a. Claude (vision) analyzes photos + context → 5-page narrative + illustration prompts
    b. Flux 1.1 Pro (fal.ai) generates one illustration per page
    c. Story + StoryPage records saved to Supabase DB
-3. User redirected to /story/[id] → BookViewer (left: narrative, right: illustration)
+4. User redirected to /story/[id] → BookViewer (left: narrative, right: illustration)
 ```
+
+Note: `/create` redirects to `/` — upload lives on the home page.
 
 ### Image generation strategy pattern
 
@@ -91,7 +96,7 @@ Children's storybook generator: **Next.js 15 App Router + tRPC v11 + Prisma + Su
 
 **`src/app/api/upload/route.ts`** — Handles file uploads; converts HEIC→JPEG using `heic-convert` before storing.
 
-**`src/app/_components/`** — `UploadForm.tsx` (client), `BookViewer.tsx` (client).
+**`src/app/_components/`** — `Header.tsx` (sticky nav), `UploadForm.tsx` (drag-drop upload + generating overlay), `BookViewer.tsx` (book spread with Framer Motion transitions).
 
 ### Supabase + Prisma connection setup
 
