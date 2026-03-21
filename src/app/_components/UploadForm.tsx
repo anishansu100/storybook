@@ -20,6 +20,7 @@ export function UploadForm() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [tripContext, setTripContext] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [convertingIndexes, setConvertingIndexes] = useState<Set<number>>(new Set());
   const [status, setStatus] = useState<
     "idle" | "uploading" | "generating" | "error"
   >("idle");
@@ -35,11 +36,42 @@ export function UploadForm() {
     },
   });
 
-  // Manage object URL previews
+  // Manage object URL previews, converting HEIC to JPEG for display
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+    const urls: string[] = [];
+    let cancelled = false;
+
+    async function buildPreviews() {
+      const heic2any = (await import("heic2any")).default;
+      const converting = new Set<number>();
+      files.forEach((f, i) => {
+        if (/\.(heic|heif)$/i.test(f.name) || f.type === "image/heic" || f.type === "image/heif") {
+          converting.add(i);
+        }
+      });
+      if (!cancelled) setConvertingIndexes(converting);
+
+      const results = await Promise.all(
+        files.map(async (f, i) => {
+          if (converting.has(i)) {
+            const blob = await heic2any({ blob: f, toType: "image/jpeg", quality: 0.7 }) as Blob;
+            if (!cancelled) setConvertingIndexes((prev) => { const next = new Set(prev); next.delete(i); return next; });
+            return URL.createObjectURL(blob);
+          }
+          return URL.createObjectURL(f);
+        }),
+      );
+      if (!cancelled) {
+        urls.push(...results);
+        setPreviews(results);
+      }
+    }
+
+    void buildPreviews();
+    return () => {
+      cancelled = true;
+      urls.forEach((u) => URL.revokeObjectURL(u));
+    };
   }, [files]);
 
   // Animate progress + messages while generating
@@ -178,10 +210,10 @@ export function UploadForm() {
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
+      <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto space-y-6 py-8">
         {/* Drop zone */}
         <div
-          className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 text-center ${
+          className={`relative border-2 border-dashed rounded-xl p-12 transition-all duration-300 text-center ${
             isDragging
               ? "border-primary bg-primary/10 scale-[1.02]"
               : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/20"
@@ -203,10 +235,10 @@ export function UploadForm() {
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
               <Upload className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">
+            <h3 className="text-lg font-bold text-foreground">
               Drop your trip photos here
             </h3>
-            <p className="text-muted-foreground max-w-xs mx-auto">
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               Or click to browse. We support JPG, PNG, and HEIC.
             </p>
           </div>
@@ -218,7 +250,7 @@ export function UploadForm() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-6 space-y-6"
+              className="space-y-6"
             >
               {/* Thumbnail grid */}
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
@@ -231,14 +263,23 @@ export function UploadForm() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     className="relative aspect-square rounded-lg overflow-hidden bg-muted group"
                   >
-                    {previews[idx] && (
+                    {convertingIndexes.has(idx) ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted/50">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                          className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+                        />
+                        <span className="text-xs text-muted-foreground">Converting…</span>
+                      </div>
+                    ) : previews[idx] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={previews[idx]}
                         alt="preview"
                         className="w-full h-full object-cover"
                       />
-                    )}
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => removeFile(idx)}

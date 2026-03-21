@@ -44,6 +44,9 @@ importers:
       heic-convert:
         specifier: ^2.1.0
         version: 2.1.0
+      heic2any:
+        specifier: ^0.0.4
+        version: 0.0.4
       lucide-react:
         specifier: ^0.577.0
         version: 0.577.0(react@19.2.4)
@@ -1502,6 +1505,9 @@ packages:
   heic-decode@2.1.0:
     resolution: {integrity: sha512-0fB3O3WMk38+PScbHLVp66jcNhsZ/ErtQ6u2lMYu/YxXgbBtl+oKOhGQHa4RpvE68k8IzbWkABzHnyAIjR758A==}
     engines: {node: '>=8.0.0'}
+
+  heic2any@0.0.4:
+    resolution: {integrity: sha512-3lLnZiDELfabVH87htnRolZ2iehX9zwpRyGNz22GKXIu0fznlblf0/ftppXKNqS26dqFSeqfIBhAmAj/uSp0cA==}
 
   hono@4.11.9:
     resolution: {integrity: sha512-Eaw2YTGM6WOxA6CXbckaEvslr2Ne4NFsKrvc0v97JD5awbmeBLO5w9Ho9L9kmKonrwF9RJlW6BxT1PVv/agBHQ==}
@@ -4009,6 +4015,8 @@ snapshots:
   heic-decode@2.1.0:
     dependencies:
       libheif-js: 1.19.8
+
+  heic2any@0.0.4: {}
 
   hono@4.11.9: {}
 

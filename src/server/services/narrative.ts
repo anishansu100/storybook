@@ -26,9 +26,9 @@ export async function generateNarrative(
     model: "claude-sonnet-4-6",
     max_tokens: 2048,
     system: `You are a warm and creative children's book author.
-Your job is to look at photos from a family trip and create a short, magical children's storybook narrative.
-The story should be joyful, age-appropriate (3-8 year olds), and capture the spirit of the adventure.
-Always respond with valid JSON only — no markdown, no explanation.`,
+Your job is to look at photos and create a short, magical children's storybook narrative.
+The story should be joyful, age-appropriate (3-8 year olds), and capture the spirit of adventure.
+IMPORTANT: Respond with a JSON array ONLY. No notes, no commentary, no markdown — just the raw JSON array starting with [ and ending with ].`,
     messages: [
       {
         role: "user",
@@ -71,8 +71,19 @@ Example format:
   try {
     parsed = JSON.parse(text);
   } catch {
-    console.error("JSON parse failed. Raw text:", raw);
-    throw new Error(`Claude returned invalid JSON: ${raw.slice(0, 200)}`);
+    // Claude may have prepended a note object — try extracting the array directly
+    const arrayMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (arrayMatch) {
+      try {
+        parsed = JSON.parse(arrayMatch[0]);
+      } catch {
+        // fall through to error below
+      }
+    }
+    if (!parsed) {
+      console.error("JSON parse failed. Raw text:", raw);
+      throw new Error(`Claude returned invalid JSON: ${raw.slice(0, 200)}`);
+    }
   }
 
   // Handle both a plain array and a wrapped object like { story: [...] }

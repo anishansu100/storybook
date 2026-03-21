@@ -183,26 +183,47 @@ Claude call pattern:
 
 ## Todo checklist
 
-- [ ] Manual: Create Supabase project + storage bucket + collect API keys
-- [ ] Install new packages (`@anthropic-ai/sdk`, `@fal-ai/client`, `@supabase/supabase-js`)
-- [ ] Update `src/env.js` with new env vars
-- [ ] Update `prisma/schema.prisma` (PostgreSQL, new models)
-- [ ] Run `pnpm db:push` to apply schema to Supabase
-- [ ] Create `src/server/storage.ts`
-- [ ] Create `src/server/services/imageGen/types.ts`
-- [ ] Create `src/server/services/imageGen/flux.ts`
-- [ ] Create `src/server/services/imageGen/index.ts`
-- [ ] Create `src/server/services/narrative.ts`
-- [ ] Create `src/server/api/routers/story.ts`
-- [ ] Update `src/server/api/root.ts`
-- [ ] Create `/api/upload` route handler
-- [ ] Create `src/app/create/page.tsx` + `UploadForm.tsx`
-- [ ] Create `src/app/story/[id]/page.tsx` + `BookViewer.tsx`
-- [ ] Update `src/app/page.tsx` (home → CTA)
-- [ ] Delete old post router + component
-- [ ] Update `.env.example`
-- [ ] Run `pnpm check` to verify no type errors
-- [ ] Manual: test full flow end-to-end
+### Core pipeline
+- [x] Manual: Create Supabase project + storage bucket + collect API keys
+- [x] Install new packages (`@anthropic-ai/sdk`, `@fal-ai/client`, `@supabase/supabase-js`)
+- [x] Update `src/env.js` with new env vars
+- [x] Update `prisma/schema.prisma` (PostgreSQL, new models)
+- [x] Run `pnpm db:push` to apply schema to Supabase
+- [x] Create `src/server/storage.ts`
+- [x] Create `src/server/services/imageGen/types.ts`
+- [x] Create `src/server/services/imageGen/flux.ts`
+- [x] Create `src/server/services/imageGen/index.ts`
+- [x] Create `src/server/services/narrative.ts`
+- [x] Create `src/server/api/routers/story.ts`
+- [x] Update `src/server/api/root.ts`
+- [x] Create `/api/upload` route handler
+- [x] Create `src/app/create/page.tsx` + `UploadForm.tsx`
+- [x] Create `src/app/story/[id]/page.tsx` + `BookViewer.tsx`
+- [x] Update `src/app/page.tsx` (home → CTA)
+- [x] Delete old post router + component
+- [x] Update `.env.example`
+- [x] Run `pnpm check` to verify no type errors
+- [x] Manual: test full flow end-to-end
+
+### UI polish
+- [x] Switch image model from Flux Pro to Flux Schnell (cheaper, ~$0.003/image)
+- [x] Fix narrative JSON parser to handle Claude preamble notes
+- [x] Tighten Claude system prompt to prevent non-JSON output
+- [x] Remove Examples and Pricing nav links
+- [x] Comment out Sign In / Get Started buttons
+- [x] Center Home nav link in header
+- [x] Split home page into separate badge / headline / upload / feature card sections
+- [x] Apply consistent spacing scale (8pt grid) across all pages
+- [x] Define Major Third (×1.25) type scale in `globals.css` via Tailwind v4 `@theme`
+- [x] Apply type scale consistently across all components and pages
+- [x] Fix book spread so both pages are `w-1/2` and binding divider sits at true center
+- [x] Add ragged clip-path border on illustrations (seeded per page)
+- [x] Add font size controls (A / A) below the book
+- [x] Add text color picker (circular swatch) below the book
+- [x] Make narrative text scrollable on overflow
+- [x] Add HEIC client-side preview conversion via `heic2any`
+- [x] Add loading spinner per thumbnail during HEIC conversion
+- [x] Increase upload form padding and drop zone breathing room
 
 ---
 

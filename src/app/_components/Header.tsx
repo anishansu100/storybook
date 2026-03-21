@@ -5,11 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Examples", href: "/examples" },
-  { label: "Pricing", href: "/pricing" },
-];
+const navItems = [{ label: "Home", href: "/" }];
 
 export function Header() {
   const pathname = usePathname();
@@ -17,17 +13,17 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
         <Link
           href="/"
-          className="text-2xl font-bold text-primary flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="text-xl font-bold text-primary flex items-center gap-2 hover:opacity-80 transition-opacity"
           style={{ fontFamily: "var(--font-heading)" }}
         >
           <span className="text-3xl">📚</span> TripTales
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -44,7 +40,7 @@ export function Header() {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* <div className="hidden md:flex items-center gap-4">
           <button className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2">
             Sign In
           </button>
@@ -54,7 +50,7 @@ export function Header() {
           >
             Get Started
           </Link>
-        </div>
+        </div> */}
 
         {/* Mobile Menu Button */}
         <button
@@ -88,7 +84,7 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <div className="border-t pt-2 mt-2 space-y-2">
+            {/* <div className="border-t pt-2 mt-2 space-y-2">
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted"
@@ -102,7 +98,7 @@ export function Header() {
               >
                 Get Started
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       )}

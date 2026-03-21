@@ -34,17 +34,21 @@ export default async function StoryPage({
   }
 
   return (
-    <main className="px-4 py-12">
-      <div className="container mx-auto max-w-4xl">
+    <main className="flex flex-col">
+      <section className="container mx-auto max-w-4xl px-6 pt-10 pb-4">
         <Link
           href="/"
-          className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 mb-8"
+          className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-2"
         >
           ← Create another
         </Link>
-        <h1 className="text-3xl font-bold mb-10">Your storybook</h1>
+      </section>
+      <section className="container mx-auto max-w-4xl px-6 pb-4">
+        <h1 className="text-2xl font-bold">Your storybook</h1>
+      </section>
+      <section className="container mx-auto max-w-4xl px-6 pb-20">
         <BookViewer pages={story.pages} />
-      </div>
+      </section>
     </main>
   );
 }

@@ -6,7 +6,7 @@ fal.config({ credentials: env.FAL_API_KEY });
 
 export const fluxStrategy: ImageGenStrategy = {
   async generate({ prompt, style }) {
-    const result = await fal.subscribe("fal-ai/flux-pro/v1.1", {
+    const result = await fal.subscribe("fal-ai/flux/schnell", {
       input: {
         prompt: `${style}. ${prompt}`,
         image_size: "landscape_4_3",
