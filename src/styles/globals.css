@@ -3,6 +3,39 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* ─── Type scale — Major Third (×1.25) ───────────────────────────
+     xs   0.64rem  captions, page numbers
+     sm   0.80rem  secondary text, nav labels
+     base 1.00rem  body copy
+     md   1.25rem  card body, sub-labels
+     lg   1.56rem  sub-headings
+     xl   1.95rem  section headings
+     2xl  2.44rem  page titles
+     3xl  3.05rem  hero (mobile)
+     4xl  3.81rem  hero (desktop)
+  ──────────────────────────────────────────────────────────────── */
+  --text-xs:   0.64rem;
+  --text-sm:   0.80rem;
+  --text-base: 1.00rem;
+  --text-md:   1.25rem;
+  --text-lg:   1.56rem;
+  --text-xl:   1.95rem;
+  --text-2xl:  2.44rem;
+  --text-3xl:  3.05rem;
+  --text-4xl:  3.81rem;
+
+  /* ─── Spacing scale — 8pt grid ───────────────────────────────────
+     1 →  4px   inline micro gaps
+     2 →  8px   tight gaps (icon + label)
+     4 → 16px   component internal gap
+     6 → 24px   component padding / section gap
+     8 → 32px   large component padding
+    12 → 48px   between sub-sections
+    16 → 64px   section vertical padding
+    20 → 80px   page-level top/bottom
+    24 → 96px   hero breathing room
+  ──────────────────────────────────────────────────────────────── */
+
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
