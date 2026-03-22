@@ -56,3 +56,9 @@
 
 - Tightened system prompt to prevent Claude from prepending note objects before the JSON array
 - Added regex fallback to extract JSON array even if Claude includes a preamble note
+
+## Loading State UX (`UploadForm.tsx`)
+
+- Collapsed `uploading` + `generating` into a single `generating` state — overlay now appears immediately on submit
+- Error handling moved inside the overlay: on failure, the overlay stays open and switches to an error view with a "Try Again" button (returns user to form with files intact)
+- Removed the inline "Uploading photos..." text and in-form error banner — the overlay owns the full loading flow

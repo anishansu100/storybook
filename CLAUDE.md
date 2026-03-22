@@ -33,7 +33,7 @@ Examples:
 
 ## Claude Code Workflow
 
-- **Plan docs**: Write plan/todo markdown files to `docs/ai/<feature-name>.md`. Do not scatter docs elsewhere in the project.
+- **Plan docs**: Write plan/todo/change-log markdown files directly to `docs/ai/<feature-name>.md`. Keep it flat — do not create subdirectories inside `docs/ai/`.
 - **No auto-commits**: Never run `git add` or `git commit` unless explicitly asked. Always wait until the user has tested the changes.
 
 ## Commands
@@ -77,7 +77,7 @@ Note: `/create` redirects to `/` — upload lives on the home page.
 ### Image generation strategy pattern
 
 `src/server/services/imageGen/` uses a swappable strategy:
-- `flux.ts` — Phase 1: text-to-image via Flux 1.1 Pro (current)
+- `flux.ts` — Phase 1: text-to-image via Flux Schnell (current, ~$0.003/image)
 - `ipAdapter.ts` — Phase 2: add this for face-reference via IP-Adapter
 - `lora.ts` — Phase 3: add this for LoRA fine-tuning per person
 - `index.ts` — exports active strategy; swap by setting `IMAGE_GEN_STRATEGY` env var

@@ -22,7 +22,7 @@ export function UploadForm() {
   const [isDragging, setIsDragging] = useState(false);
   const [convertingIndexes, setConvertingIndexes] = useState<Set<number>>(new Set());
   const [status, setStatus] = useState<
-    "idle" | "uploading" | "generating" | "error"
+    "idle" | "generating" | "error"
   >("idle");
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -131,7 +131,7 @@ export function UploadForm() {
     e.preventDefault();
     if (!files.length) return;
 
-    setStatus("uploading");
+    setStatus("generating");
     setError(null);
 
     try {
@@ -157,55 +157,71 @@ export function UploadForm() {
     }
   }
 
-  const isLoading = status === "uploading" || status === "generating";
+  const isLoading = status === "generating";
 
   return (
     <>
       {/* Full-screen generating overlay */}
       <AnimatePresence>
-        {status === "generating" && (
+        {(status === "generating" || status === "error") && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 bg-background/95 backdrop-blur-sm"
           >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="mb-12 text-8xl select-none"
-            >
-              ✨
-            </motion.div>
-
-            <h2 className="text-4xl font-bold mb-6 text-center">
-              Creating Your Storybook
-            </h2>
-
-            <p className="text-muted-foreground text-lg mb-12 text-center max-w-md h-8">
-              {GENERATING_MESSAGES[messageIndex]}
-            </p>
-
-            <div className="w-full max-w-md mb-4">
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{
-                    background:
-                      "linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)))",
-                  }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
+            {status === "error" ? (
+              <div className="flex flex-col items-center gap-6 text-center max-w-md">
+                <div className="text-6xl select-none">😔</div>
+                <h2 className="text-4xl font-bold">Something went wrong</h2>
+                <p className="text-muted-foreground text-lg">{error}</p>
+                <button
+                  onClick={() => setStatus("idle")}
+                  className="rounded-full px-8 py-4 text-lg font-bold bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
+                >
+                  Try Again
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                {Math.round(progress)}%
-              </p>
-            </div>
+            ) : (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="mb-12 text-8xl select-none"
+                >
+                  ✨
+                </motion.div>
 
-            <p className="text-sm text-muted-foreground">
-              Typical wait time: 60–90 seconds
-            </p>
+                <h2 className="text-4xl font-bold mb-6 text-center">
+                  Creating Your Storybook
+                </h2>
+
+                <p className="text-muted-foreground text-lg mb-12 text-center max-w-md h-8">
+                  {GENERATING_MESSAGES[messageIndex]}
+                </p>
+
+                <div className="w-full max-w-md mb-4">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{
+                        background:
+                          "linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)))",
+                      }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    {Math.round(progress)}%
+                  </p>
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                  Typical wait time: 60–90 seconds
+                </p>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -326,20 +342,6 @@ export function UploadForm() {
                   className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 transition"
                 />
               </div>
-
-              {/* Error */}
-              {status === "error" && (
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
-
-              {/* Upload progress */}
-              {status === "uploading" && (
-                <p className="text-center text-muted-foreground text-sm">
-                  Uploading photos...
-                </p>
-              )}
 
               {/* Submit */}
               <button
