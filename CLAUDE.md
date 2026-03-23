@@ -56,7 +56,7 @@ See `.env.example` for all required environment variables.
 
 ## Architecture
 
-Children's storybook generator: **Next.js 15 App Router + tRPC v11 + Prisma + Supabase + Claude + Flux**.
+Children's storybook generator: **Next.js 15 App Router + tRPC v11 + Prisma + Supabase + Claude + OpenAI**.
 
 App name: **TripTales**. Design system: Nunito (body) + Fredoka (headings), sky-blue/yellow/coral palette (HSL CSS vars in `globals.css`).
 
@@ -66,9 +66,12 @@ App name: **TripTales**. Design system: Nunito (body) + Fredoka (headings), sky-
 1. User drops photos on home page (/) → clicks "Create Magic Story"
 2. UploadForm POSTs to /api/upload → HEIC→JPEG conversion → Supabase Storage → returns URLs
 3. story.create tRPC mutation:
-   a. Claude (vision) analyzes photos + context → 5-page narrative + illustration prompts
-   b. Flux 1.1 Pro (fal.ai) generates one illustration per page
-   c. Story + StoryPage records saved to Supabase DB
+   a. In parallel:
+      - Claude (vision) analyzes photos + context → 5-page narrative + illustration prompts
+      - Claude (vision) extracts main character descriptions (characterExtraction.ts)
+   b. gpt-image-1 generates a canonical reference image per character → uploaded to Supabase
+   c. gpt-image-1 generates one illustration per page (images/edit with character refs attached)
+   d. Story + StoryPage records saved to Supabase DB
 4. User redirected to /story/[id] → BookViewer (left: narrative, right: illustration)
 ```
 
@@ -76,11 +79,10 @@ Note: `/create` redirects to `/` — upload lives on the home page.
 
 ### Image generation strategy pattern
 
-`src/server/services/imageGen/` uses a swappable strategy:
-- `flux.ts` — Phase 1: text-to-image via Flux Schnell (current, ~$0.003/image)
-- `ipAdapter.ts` — Phase 2: add this for face-reference via IP-Adapter
-- `lora.ts` — Phase 3: add this for LoRA fine-tuning per person
-- `index.ts` — exports active strategy; swap by setting `IMAGE_GEN_STRATEGY` env var
+`src/server/services/imageGen/` uses a swappable strategy via `IMAGE_GEN_STRATEGY` env var:
+- `gpt4o.ts` — **default**: gpt-image-1 with character reference image anchoring (requires `OPENAI_API_KEY`)
+- `flux.ts` — fallback: text-to-image via Flux Schnell (~$0.003/image, requires `FAL_API_KEY`)
+- `index.ts` — exports active strategy; defaults to `gpt4o`
 
 ### Key layers
 
@@ -91,6 +93,8 @@ Note: `/create` redirects to `/` — upload lives on the home page.
 **`src/server/storage.ts`** — Supabase Storage upload helper (server-only, uses service role key).
 
 **`src/server/services/narrative.ts`** — Calls Claude with vision to analyze photos and return structured JSON `{ story: [{ pageNumber, narrative, illustrationPrompt }] }`. Parser handles both plain array and wrapped object responses.
+
+**`src/server/services/characterExtraction.ts`** — Two functions: `extractCharacters` (Claude vision → `{ label, description }[]`) and `generateCharacterReferenceImages` (gpt-image-1 text-to-image per character → uploads to Supabase → returns URLs used as references in scene generation).
 
 **`src/server/api/routers/story.ts`** — tRPC: `create` (full generation pipeline), `getById`.
 
