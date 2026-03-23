@@ -8,9 +8,10 @@ import { api } from "~/trpc/react";
 
 const GENERATING_MESSAGES = [
   "Uploading your magical memories...",
-  "Analyzing your photos...",
-  "Crafting the narrative...",
-  "Illustrating your story...",
+  "Identifying your characters...",
+  "Crafting your story narrative...",
+  "Generating illustrations...",
+  "Finishing your storybook...",
 ];
 
 export function UploadForm() {
@@ -81,7 +82,16 @@ export function UploadForm() {
     setMessageIndex(0);
 
     const progressInterval = setInterval(() => {
-      setProgress((p) => (p >= 90 ? p : p + Math.random() * 8));
+      setProgress((p) => {
+        if (p >= 98) return 98;
+        // Fast start (upload), medium middle (char extraction + illustrations), slow crawl near end
+        const rate =
+          p < 15 ? 3 + Math.random() * 4
+          : p < 45 ? 0.8 + Math.random() * 1.2
+          : p < 80 ? 0.3 + Math.random() * 0.7
+          : 0.08 + Math.random() * 0.12;
+        return Math.min(98, p + rate);
+      });
     }, 800);
 
     const messageInterval = setInterval(() => {
@@ -218,7 +228,7 @@ export function UploadForm() {
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                  Typical wait time: 60–90 seconds
+                  Typical wait time: 2–3 minutes
                 </p>
               </>
             )}

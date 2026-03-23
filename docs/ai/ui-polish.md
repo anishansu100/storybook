@@ -62,3 +62,17 @@
 - Collapsed `uploading` + `generating` into a single `generating` state — overlay now appears immediately on submit
 - Error handling moved inside the overlay: on failure, the overlay stays open and switches to an error view with a "Try Again" button (returns user to form with files intact)
 - Removed the inline "Uploading photos..." text and in-form error banner — the overlay owns the full loading flow
+
+## Progress Bar (`UploadForm.tsx`)
+
+- Replaced flat 90% cap with **diminishing-rate increments**: fast start (upload feel), medium middle (character extraction + illustrations), slow crawl from 80–98% — always visually moving, never frozen
+- Updated messages to reflect actual generation steps: uploading → identifying characters → crafting narrative → generating illustrations → finishing
+- Updated wait time copy from "60–90 seconds" to "2–3 minutes" to match GPT-4o generation time
+
+## PDF Download (`BookViewer.tsx`)
+
+- **Download PDF** button is now functional (was previously disabled/coming soon)
+- Uses `jspdf` (client-side, dynamic import) to build a landscape A4 PDF matching the book spread layout: narrative text left, illustration right, soft binding divider
+- Illustrations are fetched as data URLs at download time and embedded in the PDF
+- Button shows a spinner + "Generating PDF..." while building; saves as `TripTales-storybook.pdf`
+- Removed the `($9)` price label — download is free for now

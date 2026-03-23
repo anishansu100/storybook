@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Loader2,
   ShoppingCart,
 } from "lucide-react";
 import Image from "next/image";
@@ -37,10 +38,76 @@ interface BookViewerProps {
   pages: Page[];
 }
 
+async function fetchAsDataUrl(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export function BookViewer({ pages }: BookViewerProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [fontSize, setFontSize] = useState(1.4); // rem
   const [textColor, setTextColor] = useState("#1a1a1a");
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownloadPDF() {
+    setDownloading(true);
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const W = 297; // landscape A4 mm
+      const H = 210;
+      const margin = 12;
+      const midX = W / 2;
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+      for (let i = 0; i < pages.length; i++) {
+        if (i > 0) doc.addPage();
+        const page = pages[i]!;
+
+        // Page background
+        doc.setFillColor(253, 251, 247);
+        doc.rect(0, 0, W, H, "F");
+
+        // Right half: illustration
+        if (page.illustrationUrl) {
+          const dataUrl = await fetchAsDataUrl(page.illustrationUrl);
+          const imgX = midX + margin;
+          const imgW = midX - margin * 2;
+          const imgH = H - margin * 2;
+          doc.addImage(dataUrl, "JPEG", imgX, margin, imgW, imgH, undefined, "MEDIUM");
+        }
+
+        // Left half: narrative text (vertically centered)
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(13);
+        doc.setTextColor(50, 50, 50);
+        const textW = midX - margin * 2;
+        const lines = doc.splitTextToSize(page.narrative, textW) as string[];
+        const lineHeight = 7;
+        const blockH = lines.length * lineHeight;
+        const textStartY = (H - blockH) / 2 + lineHeight;
+        doc.text(lines, midX / 2, textStartY, { align: "center" });
+
+        // Soft binding divider
+        doc.setDrawColor(220, 215, 205);
+        doc.line(midX, margin, midX, H - margin);
+
+        // Page number
+        doc.setFontSize(8);
+        doc.setTextColor(170, 165, 155);
+        doc.text(String(page.pageNumber), margin, H - margin * 0.6);
+      }
+
+      doc.save("TripTales-storybook.pdf");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   const clipPaths = useMemo(
     () => pages.map((_, i) => makeRaggedClipPath(i + 1)),
@@ -156,12 +223,16 @@ export function BookViewer({ pages }: BookViewerProps) {
           Order Hardcover ($29)
         </button>
         <button
-          disabled
-          title="Coming soon"
-          className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-md border border-primary/20 text-foreground opacity-60 cursor-not-allowed"
+          onClick={handleDownloadPDF}
+          disabled={downloading}
+          className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-md border border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <Download className="w-5 h-5" />
-          Download PDF ($9)
+          {downloading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Download className="w-5 h-5" />
+          )}
+          {downloading ? "Generating PDF..." : "Download PDF"}
         </button>
         <button
           disabled
