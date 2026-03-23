@@ -1,13 +1,14 @@
 # Storybook
 
-A web app that turns family trip photos into AI-generated children's storybooks. Parents upload photos, and the app uses Claude to write a narrative and Flux to generate children's book-style illustrations, laid out in a page-flip book UI.
+A web app that turns family trip photos into AI-generated children's storybooks. Parents upload photos, and the app uses Claude to write a narrative and GPT-4o to generate consistent, character-anchored illustrations, laid out in a page-flip book UI.
 
 ## Stack
 
 - **Next.js 15** (App Router) + **tRPC v11** + **Prisma** + **Tailwind CSS v4**
 - **Supabase** — PostgreSQL database + file storage
-- **Anthropic Claude** — narrative generation from photos (vision)
-- **fal.ai Flux 1.1 Pro** — children's book illustration generation
+- **Anthropic Claude** — character extraction + narrative generation (vision)
+- **OpenAI gpt-image-1** — illustration generation with character reference image anchoring
+- **fal.ai Flux Schnell** — optional fallback image generator (`IMAGE_GEN_STRATEGY=flux`)
 
 ## Setup
 
@@ -41,7 +42,8 @@ See `.env.example` for the full list. You need:
 | `NEXT_PUBLIC_SUPABASE_URL` | Same as `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API → anon key |
 | `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys |
-| `FAL_API_KEY` | fal.ai → Dashboard → API Keys |
+| `OPENAI_API_KEY` | platform.openai.com → API Keys |
+| `FAL_API_KEY` | fal.ai → Dashboard → API Keys — **optional**, only needed if using `IMAGE_GEN_STRATEGY=flux` |
 
 ### Supabase storage
 
@@ -59,7 +61,8 @@ src/
   server/
     api/routers/      # tRPC routers (story: create, getById)
     services/
-      imageGen/       # Swappable image generation strategy (flux today, IP-Adapter/LoRA later)
+      imageGen/       # Swappable image generation strategy (gpt4o default, flux fallback)
+      characterExtraction.ts  # Claude vision → character descriptions + gpt-image-1 reference images
       narrative.ts    # Claude vision → story narrative + illustration prompts
     storage.ts        # Supabase Storage helpers
 docs/
@@ -69,6 +72,5 @@ docs/
 ## Roadmap
 
 - **Phase 1** ✅ — Upload photos → Claude narrative → Flux illustrations → book viewer
-- **Phase 2** — Face consistency via IP-Adapter (pass reference photos to Flux)
-- **Phase 3** — LoRA fine-tuning per person if IP-Adapter quality isn't sufficient
-- **Phase 4** — Auth, accounts, download PDF, order physical book + payment
+- **Phase 2** ✅ — Character consistency via GPT-4o reference image anchoring + PDF download
+- **Phase 3** — Auth, accounts, order physical book + payment
