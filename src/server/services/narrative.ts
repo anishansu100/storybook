@@ -72,7 +72,7 @@ Example format:
     parsed = JSON.parse(text);
   } catch {
     // Claude may have prepended a note object — try extracting the array directly
-    const arrayMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    const arrayMatch = /\[\s*\{[\s\S]*\}\s*\]/.exec(text);
     if (arrayMatch) {
       try {
         parsed = JSON.parse(arrayMatch[0]);

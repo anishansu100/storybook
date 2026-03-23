@@ -2,6 +2,10 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { generateNarrative } from "~/server/services/narrative";
 import { imageGen } from "~/server/services/imageGen";
+import {
+  extractCharacters,
+  generateCharacterReferenceImages,
+} from "~/server/services/characterExtraction";
 
 const ILLUSTRATION_STYLE =
   "Children's book illustration, soft watercolor style, warm and whimsical, gentle colors, storybook art";
@@ -25,18 +29,40 @@ export const storyRouter = createTRPCRouter({
       });
 
       try {
-        // Generate narrative via Claude
-        const pages = await generateNarrative(
-          input.imageUrls,
-          input.tripContext,
-        );
+        // Run narrative generation and character extraction in parallel
+        const [pages, rawCharacters] = await Promise.all([
+          generateNarrative(input.imageUrls, input.tripContext),
+          extractCharacters(input.imageUrls),
+        ]);
 
-        // Generate illustrations via Flux, sequentially to avoid rate limits
+        // Generate canonical reference images for each character
+        const characters =
+          rawCharacters.length > 0
+            ? await generateCharacterReferenceImages(rawCharacters, story.id)
+            : [];
+
+        const referenceImageUrls = characters
+          .map((c) => c.referenceImageUrl)
+          .filter((url): url is string => Boolean(url));
+
+        const characterDescText =
+          characters.length > 0
+            ? ` Characters: ${characters.map((c) => c.description).join("; ")}.`
+            : "";
+
+        // Generate illustrations sequentially to avoid rate limits
         for (const page of pages) {
-          const { imageUrl } = await imageGen.generate({
-            prompt: page.illustrationPrompt,
-            style: ILLUSTRATION_STYLE,
-          });
+          const enrichedPrompt = page.illustrationPrompt + characterDescText;
+
+          const { imageUrl } = await imageGen.generate(
+            {
+              prompt: enrichedPrompt,
+              referenceImages: referenceImageUrls,
+              style: ILLUSTRATION_STYLE,
+            },
+            story.id,
+            page.pageNumber,
+          );
 
           await ctx.db.storyPage.create({
             data: {

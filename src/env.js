@@ -9,7 +9,8 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     ANTHROPIC_API_KEY: z.string().min(1),
-    FAL_API_KEY: z.string().min(1),
+    FAL_API_KEY: z.string().min(1).optional(),
+    OPENAI_API_KEY: z.string().min(1),
     SUPABASE_URL: z.string().url(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   },
@@ -25,6 +26,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     FAL_API_KEY: process.env.FAL_API_KEY,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
