@@ -155,18 +155,40 @@ export function UploadForm() {
     setError(null);
 
     try {
-      const formData = new FormData();
-      for (const file of files) formData.append("files", file);
-
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? "Upload failed");
+      // 1. Get signed upload URLs from our API
+      const signedRes = await fetch("/api/upload/signed-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filenames: files.map((f) => f.name),
+        }),
+      });
+      if (!signedRes.ok) {
+        const body = (await signedRes.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? "Failed to get upload URLs");
       }
 
-      const { urls } = (await res.json()) as { urls: string[] };
+      const { uploads } = (await signedRes.json()) as {
+        uploads: { signedUrl: string; path: string; token: string; publicUrl: string }[];
+      };
 
-      setStatus("generating");
+      // 2. Upload each file directly to Supabase using the signed URL
+      await Promise.all(
+        files.map(async (file, i) => {
+          const { signedUrl } = uploads[i]!;
+          const uploadRes = await fetch(signedUrl, {
+            method: "PUT",
+            headers: { "Content-Type": file.type || "application/octet-stream" },
+            body: file,
+          });
+          if (!uploadRes.ok) {
+            throw new Error(`Failed to upload ${file.name}`);
+          }
+        }),
+      );
+
+      // 3. Collect public URLs and create the story
+      const urls = uploads.map((u) => u.publicUrl);
       createStory.mutate({
         imageUrls: urls,
         tripContext: tripContext || undefined,

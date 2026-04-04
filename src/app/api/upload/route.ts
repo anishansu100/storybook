@@ -3,7 +3,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { uploadFile } from "~/server/storage";
 
 export const maxDuration = 60;
-export const maxBodySize = "50mb";
 
 const HEIC_TYPES = new Set(["image/heic", "image/heif", "image/heic-sequence"]);
 
