@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Fredoka, Nunito } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { Header } from "~/app/_components/Header";
@@ -27,7 +28,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${nunito.variable} ${fredoka.variable}`}>
+    <ClerkProvider>
+      <html lang="en" className={`${nunito.variable} ${fredoka.variable}`}>
       <body className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden">
         <TRPCReactProvider>
           <Header />
@@ -40,5 +42,6 @@ export default function RootLayout({
         </TRPCReactProvider>
       </body>
     </html>
+    </ClerkProvider>
   );
 }

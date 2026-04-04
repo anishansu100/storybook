@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { SignInButton, Show, UserButton } from "@clerk/nextjs";
 
 const navItems = [{ label: "Home", href: "/" }];
 
@@ -39,18 +40,19 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Desktop Actions */}
-        {/* <div className="hidden md:flex items-center gap-4">
-          <button className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2">
-            Sign In
-          </button>
-          <Link
-            href="/"
-            className="text-sm font-bold bg-primary text-primary-foreground rounded-full px-5 py-2 shadow-md hover:shadow-lg hover:opacity-90 transition-all"
-          >
-            Get Started
-          </Link>
-        </div> */}
+        {/* Desktop Auth */}
+        <div className="hidden md:flex items-center gap-4">
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2">
+                Sign In
+              </button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+        </div>
 
         {/* Mobile Menu Button */}
         <button
@@ -84,21 +86,23 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            {/* <div className="border-t pt-2 mt-2 space-y-2">
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted"
-              >
-                Sign In
-              </button>
-              <Link
-                href="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity"
-              >
-                Get Started
-              </Link>
-            </div> */}
+            <div className="border-t pt-2 mt-2">
+              <Show when="signed-out">
+                <SignInButton mode="modal">
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted"
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+              </Show>
+              <Show when="signed-in">
+                <div className="px-4 py-2">
+                  <UserButton />
+                </div>
+              </Show>
+            </div>
           </div>
         </div>
       )}
