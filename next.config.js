@@ -2,6 +2,9 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
+  experimental: {
+    middlewareClientMaxBodySize: "50mb",
+  },
   images: {
     remotePatterns: [
       // fal.ai generated images

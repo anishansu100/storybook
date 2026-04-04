@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { uploadFile } from "~/server/storage";
 
 export const maxDuration = 60;
+export const maxBodySize = "50mb";
 
 const HEIC_TYPES = new Set(["image/heic", "image/heif", "image/heic-sequence"]);
 
@@ -33,6 +34,10 @@ export async function POST(req: NextRequest) {
 
     if (!files.length) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
+    }
+
+    if (files.length > 10) {
+      return NextResponse.json({ error: "Maximum 10 images allowed" }, { status: 400 });
     }
 
     const urls: string[] = [];

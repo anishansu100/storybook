@@ -104,9 +104,19 @@ export function UploadForm() {
     };
   }, [status]);
 
+  const MAX_IMAGES = 10;
+
   function addFiles(incoming: File[]) {
     const images = incoming.filter((f) => f.type.startsWith("image/"));
-    setFiles((prev) => [...prev, ...images]);
+    setFiles((prev) => {
+      const combined = [...prev, ...images];
+      if (combined.length > MAX_IMAGES) {
+        setError(`You can upload up to ${MAX_IMAGES} images.`);
+        return prev;
+      }
+      setError(null);
+      return combined;
+    });
   }
 
   function removeFile(index: number) {
@@ -269,6 +279,11 @@ export function UploadForm() {
             </p>
           </div>
         </div>
+
+        {/* Inline error (e.g. image limit) */}
+        {error && status === "idle" && (
+          <p className="text-sm text-red-500 text-center">{error}</p>
+        )}
 
         {/* Thumbnails + actions */}
         <AnimatePresence>
