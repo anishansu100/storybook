@@ -1,7 +1,19 @@
+import { getIronSession } from "iron-session";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
 import { db } from "~/server/db";
+import { type SessionData, sessionOptions, getAdminEmails } from "~/lib/session";
 import { addUser, removeUser } from "./_actions";
 
 export default async function AdminPage() {
+  const session = await getIronSession<SessionData>(
+    await cookies(),
+    sessionOptions,
+  );
+  if (!session.email || !getAdminEmails().has(session.email.toLowerCase())) {
+    redirect("/login");
+  }
   const [allowedEmails, recentLogs] = await Promise.all([
     db.allowedEmail.findMany({ orderBy: { addedAt: "desc" } }),
     db.accessLog.findMany({
