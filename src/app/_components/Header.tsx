@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
@@ -9,7 +9,13 @@ const navItems = [{ label: "Home", href: "/" }];
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -40,17 +46,14 @@ export function Header() {
         </nav>
 
         {/* Desktop Actions */}
-        {/* <div className="hidden md:flex items-center gap-4">
-          <button className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2">
-            Sign In
-          </button>
-          <Link
-            href="/"
-            className="text-sm font-bold bg-primary text-primary-foreground rounded-full px-5 py-2 shadow-md hover:shadow-lg hover:opacity-90 transition-all"
+        <div className="hidden md:flex items-center gap-3">
+          <button
+            onClick={handleLogout}
+            className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2"
           >
-            Get Started
-          </Link>
-        </div> */}
+            Sign out
+          </button>
+        </div>
 
         {/* Mobile Menu Button */}
         <button
@@ -84,21 +87,14 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            {/* <div className="border-t pt-2 mt-2 space-y-2">
+            <div className="border-t pt-2 mt-2">
               <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted"
+                onClick={() => { setMobileMenuOpen(false); void handleLogout(); }}
+                className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted text-sm"
               >
-                Sign In
+                Sign out
               </button>
-              <Link
-                href="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-center px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity"
-              >
-                Get Started
-              </Link>
-            </div> */}
+            </div>
           </div>
         </div>
       )}

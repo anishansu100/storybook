@@ -25,6 +25,7 @@ export const storyRouter = createTRPCRouter({
           tripContext: input.tripContext,
           status: "GENERATING",
           uploadedImageUrls: input.imageUrls,
+          createdByEmail: ctx.userEmail,
         },
       });
 
@@ -79,6 +80,16 @@ export const storyRouter = createTRPCRouter({
           where: { id: story.id },
           data: { status: "COMPLETE" },
         });
+
+        if (ctx.userEmail) {
+          await ctx.db.accessLog.create({
+            data: {
+              email: ctx.userEmail,
+              action: "story_created",
+              metadata: { storyId: story.id },
+            },
+          });
+        }
       } catch (err) {
         await ctx.db.story.update({
           where: { id: story.id },

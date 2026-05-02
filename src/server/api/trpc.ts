@@ -7,10 +7,13 @@
  * need to use are documented accordingly near the end.
  */
 import { initTRPC } from "@trpc/server";
+import { getIronSession } from "iron-session";
+import { cookies } from "next/headers";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "~/server/db";
+import { type SessionData, sessionOptions } from "~/lib/session";
 
 /**
  * 1. CONTEXT
@@ -25,8 +28,13 @@ import { db } from "~/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const session = await getIronSession<SessionData>(
+    await cookies(),
+    sessionOptions,
+  );
   return {
     db,
+    userEmail: session.email ?? null,
     ...opts,
   };
 };
