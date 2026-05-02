@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { generateNarrative } from "~/server/services/narrative";
 import { imageGen } from "~/server/services/imageGen";
 import {
@@ -11,7 +11,7 @@ const ILLUSTRATION_STYLE =
   "Children's book illustration, soft watercolor style, warm and whimsical, gentle colors, storybook art";
 
 export const storyRouter = createTRPCRouter({
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         imageUrls: z.array(z.string().url()).min(1).max(20),
@@ -25,7 +25,6 @@ export const storyRouter = createTRPCRouter({
           tripContext: input.tripContext,
           status: "GENERATING",
           uploadedImageUrls: input.imageUrls,
-          createdByEmail: ctx.userEmail,
         },
       });
 
@@ -80,16 +79,6 @@ export const storyRouter = createTRPCRouter({
           where: { id: story.id },
           data: { status: "COMPLETE" },
         });
-
-        if (ctx.userEmail) {
-          await ctx.db.accessLog.create({
-            data: {
-              email: ctx.userEmail,
-              action: "story_created",
-              metadata: { storyId: story.id },
-            },
-          });
-        }
       } catch (err) {
         await ctx.db.story.update({
           where: { id: story.id },

@@ -6,14 +6,12 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
-import { getIronSession } from "iron-session";
-import { cookies } from "next/headers";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { auth } from "@clerk/nextjs/server";
 
 import { db } from "~/server/db";
-import { type SessionData, sessionOptions } from "~/lib/session";
 
 /**
  * 1. CONTEXT
@@ -28,13 +26,10 @@ import { type SessionData, sessionOptions } from "~/lib/session";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = await getIronSession<SessionData>(
-    await cookies(),
-    sessionOptions,
-  );
+  const { userId } = await auth();
   return {
     db,
-    userEmail: session.email ?? null,
+    userId,
     ...opts,
   };
 };
@@ -112,3 +107,17 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+/**
+ * Protected (authenticated) procedure
+ *
+ * Throws UNAUTHORIZED if no Clerk session is present. ctx.userId is guaranteed non-null.
+ */
+export const protectedProcedure = t.procedure.use(timingMiddleware).use(
+  t.middleware(({ ctx, next }) => {
+    if (!ctx.userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    return next({ ctx: { ...ctx, userId: ctx.userId } });
+  }),
+);

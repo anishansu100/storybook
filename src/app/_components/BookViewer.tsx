@@ -220,7 +220,7 @@ export function BookViewer({ pages }: BookViewerProps) {
           className="flex items-center gap-2 px-8 py-4 rounded-full font-bold text-md bg-secondary text-secondary-foreground shadow-lg opacity-60 cursor-not-allowed"
         >
           <ShoppingCart className="w-5 h-5" />
-          Order Hardcover ($29)
+          Order Hardcover
         </button>
         <button
           onClick={handleDownloadPDF}

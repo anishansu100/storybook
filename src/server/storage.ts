@@ -22,3 +22,26 @@ export async function uploadFile(
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
+
+export async function createSignedUploadUrl(filename: string): Promise<{
+  signedUrl: string;
+  path: string;
+  token: string;
+}> {
+  const path = `${Date.now()}-${filename}`;
+
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(path);
+
+  if (error || !data) {
+    throw new Error(`Failed to create signed URL: ${error?.message}`);
+  }
+
+  return { signedUrl: data.signedUrl, path: data.path, token: data.token };
+}
+
+export function getPublicUrl(path: string): string {
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}

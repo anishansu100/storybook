@@ -17,30 +17,9 @@ model Story {
     tripContext       String?
     status            StoryStatus @default(PENDING)
     uploadedImageUrls String[]
-    createdByEmail    String?
     createdAt         DateTime    @default(now())
     updatedAt         DateTime    @updatedAt
     pages             StoryPage[]
-
-    @@index([createdByEmail])
-}
-
-model AllowedEmail {
-    id      String   @id @default(cuid())
-    email   String   @unique
-    addedAt DateTime @default(now())
-    addedBy String
-}
-
-model AccessLog {
-    id        String   @id @default(cuid())
-    email     String
-    action    String
-    metadata  Json?
-    createdAt DateTime @default(now())
-
-    @@index([email])
-    @@index([createdAt])
 }
 
 enum StoryStatus {

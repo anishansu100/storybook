@@ -1,21 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { SignInButton, Show, UserButton } from "@clerk/nextjs";
 
 const navItems = [{ label: "Home", href: "/" }];
 
 export function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -45,14 +40,18 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
-          <button
-            onClick={handleLogout}
-            className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2"
-          >
-            Sign out
-          </button>
+        {/* Desktop Auth */}
+        <div className="hidden md:flex items-center gap-4">
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2">
+                Sign In
+              </button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
         </div>
 
         {/* Mobile Menu Button */}
@@ -87,13 +86,22 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <div className="border-t pt-2 mt-2">
-              <button
-                onClick={() => { setMobileMenuOpen(false); void handleLogout(); }}
-                className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted text-sm"
-              >
-                Sign out
-              </button>
+            <div className="border-t pt-2 mt-2 space-y-2">
+              <Show when="signed-out">
+                <SignInButton mode="modal">
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted"
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+              </Show>
+              <Show when="signed-in">
+                <div className="px-4 py-2">
+                  <UserButton />
+                </div>
+              </Show>
             </div>
           </div>
         </div>

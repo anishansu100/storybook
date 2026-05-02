@@ -35,6 +35,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
 
+    if (files.length > 10) {
+      return NextResponse.json({ error: "Maximum 10 images allowed" }, { status: 400 });
+    }
+
     const urls: string[] = [];
 
     for (const file of files) {
