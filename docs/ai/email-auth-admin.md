@@ -1,50 +1,32 @@
-# Email Auth + Admin Dashboard — Change Log
+# Auth + Admin Dashboard — Change Log
 
 ## Context
 
-TripTales was fully open — anyone with the URL could generate stories. This phase adds an invite-only email gate and an admin dashboard so Jason and his partner can control who has access and see what guests have done.
+TripTales was fully open — anyone with the URL could generate stories. The goal was to restrict access to invited users and give Jason and his partner visibility into what guests are doing.
+
+**Phase 1 (reverted):** Built a custom email-gate with iron-session, AllowedEmail/AccessLog DB tables, a `/login` page, and an admin dashboard. This was later replaced after merging with the partner's Clerk implementation.
+
+**Phase 2 (current):** Adopted Clerk for all auth. Added a TripTales-specific `/admin` page on top that shows per-user story activity using Clerk's backend API.
 
 ---
 
-## Approach
+## Current Auth Architecture
 
-**Email-only allowlist** — no passwords, no magic links. Users enter their email on a login page; if it's in the `AllowedEmail` table, they get a signed 7-day encrypted session cookie and are let in. Removing someone from the list blocks their next login; their active session expires naturally within 7 days.
+**Clerk** handles all authentication:
+- Sign in / sign up via Clerk's modal (shown in the Header)
+- Sessions managed by Clerk — no custom cookies or session tables
+- Middleware (`src/middleware.ts`) uses `clerkMiddleware` to protect `/story/*` routes
+- tRPC context provides `ctx.userId` (Clerk user ID) to all procedures
+- `protectedProcedure` in tRPC throws UNAUTHORIZED if no Clerk session
 
-**Admin dashboard** at `/admin` — protected by `ADMIN_EMAILS` env var. Shows the guest list, per-user stats, and a live activity feed.
+**Email allowlist (Clerk dashboard):**
+- Managed in Clerk → User & Authentication → Restrictions → Allowlist
+- Only emails on the list can sign up — no code required
 
----
-
-## New Packages
-
-```bash
-pnpm add iron-session  # v8.0.4 — encrypts session data into a signed httpOnly cookie
-```
-
----
-
-## New Database Models (`prisma/schema.prisma`)
-
-```prisma
-model AllowedEmail {
-  id      String   @id @default(cuid())
-  email   String   @unique
-  addedAt DateTime @default(now())
-  addedBy String                       // which admin added them (or "seed")
-}
-
-model AccessLog {
-  id        String   @id @default(cuid())
-  email     String
-  action    String                     // "login" | "story_created"
-  metadata  Json?                      // e.g. { storyId: "..." }
-  createdAt DateTime @default(now())
-
-  @@index([email])
-  @@index([createdAt])
-}
-```
-
-Also added `createdByEmail String?` + `@@index([createdByEmail])` to the existing `Story` model.
+**Admin page (`/admin`):**
+- Protected by `ADMIN_EMAILS` env var (comma-separated)
+- Checks the signed-in Clerk user's email against this list
+- Queries TripTales DB for story data, enriches with Clerk user info
 
 ---
 
@@ -52,72 +34,75 @@ Also added `createdByEmail String?` + `@@index([createdByEmail])` to the existin
 
 | Var | Description |
 |-----|-------------|
-| `SESSION_SECRET` | 32+ char random string — used by iron-session to encrypt the cookie |
+| `CLERK_SECRET_KEY` | Clerk backend API key (from Clerk dashboard) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk frontend key (from Clerk dashboard) |
 | `ADMIN_EMAILS` | Comma-separated admin emails e.g. `jason@...,partner@...` |
 
 ---
 
-## Files Created
+## Schema Change
 
-| File | Purpose |
-|------|---------|
-| `src/lib/session.ts` | iron-session config (`cookieName`, `password`, 7-day TTL), `getAdminEmails()` helper |
-| `src/middleware.ts` | Edge middleware — decrypts cookie on every request; redirects to `/login` if missing/invalid; blocks `/admin` for non-admins |
-| `src/app/login/page.tsx` | Email input form; POSTs to `/api/auth/login`; shows error on 403 |
-| `src/app/api/auth/login/route.ts` | Checks AllowedEmail table → sets session cookie → writes AccessLog `login` entry |
-| `src/app/api/auth/logout/route.ts` | Destroys session cookie |
-| `src/app/admin/page.tsx` | Server component — guest list with stats, add-user form, activity feed (last 100 events) |
-| `src/app/admin/_actions.ts` | Server Actions: `addUser`, `removeUser` (both require admin session) |
+Added `clerkUserId String?` to the `Story` model so stories can be linked back to Clerk users:
+
+```prisma
+model Story {
+  ...
+  clerkUserId  String?
+  ...
+  @@index([clerkUserId])
+}
+```
+
+Run `pnpm db:push` to apply.
 
 ---
 
-## Files Modified
+## Files Created / Modified
 
 | File | Change |
 |------|--------|
-| `prisma/schema.prisma` | Added AllowedEmail, AccessLog, Story.createdByEmail |
-| `src/env.js` | Added SESSION_SECRET (required, min 32 chars), ADMIN_EMAILS (required) |
-| `src/server/api/trpc.ts` | Reads session cookie in `createTRPCContext` → injects `userEmail` into all tRPC procedures |
-| `src/server/api/routers/story.ts` | Stamps `createdByEmail` on Story creation; writes AccessLog `story_created` entry on success |
-| `src/app/_components/Header.tsx` | Added **Sign out** button (desktop + mobile) — calls `/api/auth/logout` then redirects to `/login` |
+| `src/app/admin/page.tsx` | New — server component admin dashboard |
+| `prisma/schema.prisma` | Added `clerkUserId` + index to Story |
+| `src/env.js` | Added `ADMIN_EMAILS` |
+| `src/server/api/routers/story.ts` | Stamps `clerkUserId: ctx.userId` on story creation |
+| `src/middleware.ts` | Clerk middleware protecting `/story/*` routes |
+| `src/server/api/trpc.ts` | Clerk `auth()` in context; `protectedProcedure` added |
+| `src/app/_components/Header.tsx` | Clerk `SignInButton` + `UserButton` + `Show` |
 
 ---
 
-## Architecture Notes
+## Admin Page — What It Shows
 
-- **Middleware is Edge-compatible** — uses `unsealData` from iron-session directly (no Prisma, no Node.js APIs). Fast path: if no cookie → immediate redirect, no DB hit.
-- **No DB hit per request** — the allowlist check only happens at login time. Active sessions remain valid for 7 days after a user is removed.
-- **Admin protection is env-var-based** — `ADMIN_EMAILS` is parsed in middleware and in the `requireAdmin()` server action guard. No separate admin table needed.
-- **tRPC context carries `userEmail`** — all routers get the caller's email without parsing cookies themselves.
+**Users section:**
+- Avatar, name, email (from Clerk)
+- Story count and date of last story
 
----
+**Recent Stories feed:**
+- Status badge (complete / failed / generating)
+- Trip context snippet
+- Who created it, how many pages
+- Date + link to view completed stories
 
-## Setup (first time)
-
-1. Generate a session secret: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-2. Add to `.env`: `SESSION_SECRET="..."` and `ADMIN_EMAILS="you@...,partner@..."`
-3. `pnpm db:push` — creates AllowedEmail, AccessLog tables
-4. Seed admin emails in Prisma Studio (`pnpm db:studio`) or via the node one-liner in the main README
-5. `pnpm dev` — visit `/` and you'll be redirected to `/login`
+**Access:** log in with an admin email → go to `/admin`.
 
 ---
 
-## What Was Tested
+## Setup
 
-| Test | Expected | Result |
-|------|----------|--------|
-| `GET /` with no session | 307 redirect to `/login?from=/` | PASS |
-| `GET /` with valid session | 200, home page loads | PASS |
-| `POST /api/auth/login` — unknown email | 403 | PASS |
-| `POST /api/auth/login` — allowed email | 200 + encrypted `triptales-session` cookie | PASS |
-| `GET /admin` with valid admin session | 200, dashboard loads | PASS |
-| `GET /admin` with non-admin session | 307 redirect to `/login` | PASS |
-| `pnpm check` (lint + typecheck) | Clean | PASS |
+1. Add to `.env`:
+   ```
+   CLERK_SECRET_KEY="sk_..."
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
+   ADMIN_EMAILS="you@...,partner@..."
+   ```
+2. `pnpm db:push` — adds `clerkUserId` column to Story table
+3. In Clerk dashboard → Restrictions → enable Allowlist → add invited emails
+4. `pnpm dev` → visit `/admin` while signed in with an admin email
 
 ---
 
-## Managing Guests
+## Notes
 
-- **Add a guest**: log in with an admin email → go to `/admin` → use the Add form
-- **Remove a guest**: `/admin` → click Remove next to their email (takes effect on their next login)
-- **See activity**: `/admin` activity feed shows all logins and stories created, most recent first
+- Stories created before this change will have `clerkUserId = null` and show as "unknown user" in the admin feed
+- User management (add/remove/block) is done in the Clerk dashboard, not the admin page
+- The admin page is read-only — it shows activity, it doesn't manage users

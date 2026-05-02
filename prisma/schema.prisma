@@ -17,9 +17,12 @@ model Story {
     tripContext       String?
     status            StoryStatus @default(PENDING)
     uploadedImageUrls String[]
+    clerkUserId       String?
     createdAt         DateTime    @default(now())
     updatedAt         DateTime    @updatedAt
     pages             StoryPage[]
+
+    @@index([clerkUserId])
 }
 
 enum StoryStatus {

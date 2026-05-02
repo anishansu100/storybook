@@ -25,6 +25,7 @@ export const storyRouter = createTRPCRouter({
           tripContext: input.tripContext,
           status: "GENERATING",
           uploadedImageUrls: input.imageUrls,
+          clerkUserId: ctx.userId,
         },
       });
 
