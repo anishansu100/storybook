@@ -68,6 +68,7 @@ Run `pnpm db:push` to apply.
 | `src/middleware.ts` | Clerk middleware protecting `/story/*` routes |
 | `src/server/api/trpc.ts` | Clerk `auth()` in context; `protectedProcedure` added |
 | `src/app/_components/Header.tsx` | Clerk `SignInButton` + `UserButton` + `Show` |
+| `src/app/_components/UploadForm.tsx` | Sign-in prompt overlay for unauthenticated users |
 
 ---
 
@@ -101,8 +102,22 @@ Run `pnpm db:push` to apply.
 
 ---
 
+## Unauthenticated User Experience
+
+**Problem:** The upload form was accessible to anyone, but hitting "Create Magic Story" without a session would trigger an UNAUTHORIZED tRPC error and show a raw error screen — confusing and unhelpful.
+
+**Fix:** `UploadForm.tsx` now checks Clerk's `useUser()` hook before submitting. If the user isn't signed in, it intercepts the submit and shows a friendly full-screen overlay instead:
+- Explains TripTales is invite-only
+- "Go back" button to dismiss
+- "Sign in" button that opens the Clerk modal
+
+This way unauthenticated visitors get clear guidance rather than a cryptic error. The tRPC `protectedProcedure` still enforces auth server-side as a hard guarantee.
+
+---
+
 ## Notes
 
-- Stories created before this change will have `clerkUserId = null` and show as "unknown user" in the admin feed
+- Stories created before adding `clerkUserId` will show as "unknown user" in the admin feed — expected
 - User management (add/remove/block) is done in the Clerk dashboard, not the admin page
 - The admin page is read-only — it shows activity, it doesn't manage users
+- The Clerk allowlist only blocks new sign-ups; to remove an existing user, delete them from the Clerk dashboard under Users
