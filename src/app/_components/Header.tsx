@@ -44,7 +44,7 @@ export function Header() {
         <div className="hidden md:flex items-center gap-4">
           <Show when="signed-out">
             <SignInButton mode="modal">
-              <button className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors px-3 py-2">
+              <button className="text-sm font-bold rounded-full px-5 py-2 bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all">
                 Sign In
               </button>
             </SignInButton>
@@ -91,7 +91,7 @@ export function Header() {
                 <SignInButton mode="modal">
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full text-left px-4 py-2 rounded-lg text-foreground hover:bg-muted"
+                    className="w-full text-center px-4 py-2 rounded-full font-bold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all"
                   >
                     Sign In
                   </button>

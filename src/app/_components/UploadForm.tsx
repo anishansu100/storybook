@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth, SignInButton } from "@clerk/nextjs";
 import { AnimatePresence, motion } from "framer-motion";
 import { Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,6 +16,7 @@ const GENERATING_MESSAGES = [
 ];
 
 export function UploadForm() {
+  const { isSignedIn } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -391,13 +393,24 @@ export function UploadForm() {
               </div>
 
               {/* Submit */}
-              <button
-                type="submit"
-                disabled={isLoading || !files.length}
-                className="w-full rounded-full px-8 py-4 text-lg font-bold bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-              >
-                Create Magic Story ✨
-              </button>
+              {isSignedIn ? (
+                <button
+                  type="submit"
+                  disabled={isLoading || !files.length}
+                  className="w-full rounded-full px-8 py-4 text-lg font-bold bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                >
+                  Create Magic Story ✨
+                </button>
+              ) : (
+                <SignInButton mode="modal">
+                  <button
+                    type="button"
+                    className="w-full rounded-full px-8 py-4 text-lg font-bold bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
+                  >
+                    Sign In to Create Your Story ✨
+                  </button>
+                </SignInButton>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
