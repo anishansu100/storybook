@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { api } from "~/trpc/react";
 
 const GENERATING_MESSAGES = [
@@ -18,6 +19,8 @@ const GENERATING_MESSAGES = [
 export function UploadForm() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useUser();
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -153,6 +156,11 @@ export function UploadForm() {
     e.preventDefault();
     if (!files.length) return;
 
+    if (isLoaded && !isSignedIn) {
+      setShowSignInPrompt(true);
+      return;
+    }
+
     setStatus("generating");
     setError(null);
 
@@ -205,6 +213,41 @@ export function UploadForm() {
 
   return (
     <>
+      {/* Sign-in required overlay */}
+      <AnimatePresence>
+        {showSignInPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 bg-background/95 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-6 text-center max-w-md">
+              <div className="text-6xl select-none">📚</div>
+              <h2 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                Sign in to create your storybook
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                TripTales is invite-only. If you received an invitation, sign in with your email to get started.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSignInPrompt(false)}
+                  className="rounded-full px-6 py-3 font-semibold border border-border hover:bg-muted transition-all"
+                >
+                  Go back
+                </button>
+                <SignInButton mode="modal">
+                  <button className="rounded-full px-8 py-3 font-bold bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition-all">
+                    Sign in
+                  </button>
+                </SignInButton>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Full-screen generating overlay */}
       <AnimatePresence>
         {(status === "generating" || status === "error") && (

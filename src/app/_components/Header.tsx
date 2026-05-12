@@ -86,7 +86,7 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <div className="border-t pt-2 mt-2">
+            <div className="border-t pt-2 mt-2 space-y-2">
               <Show when="signed-out">
                 <SignInButton mode="modal">
                   <button
