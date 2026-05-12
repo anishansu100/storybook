@@ -3,21 +3,13 @@ import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
 
 import { db } from "~/server/db";
-
-function getAdminEmails(): Set<string> {
-  return new Set(
-    (process.env.ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
+import { ADMIN_EMAILS } from "~/config";
 
 export default async function AdminPage() {
   const user = await currentUser();
   const primaryEmail = user?.emailAddresses[0]?.emailAddress?.toLowerCase();
 
-  if (!primaryEmail || !getAdminEmails().has(primaryEmail)) {
+  if (!primaryEmail || !ADMIN_EMAILS.has(primaryEmail)) {
     redirect("/");
   }
 

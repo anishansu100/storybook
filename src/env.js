@@ -14,7 +14,6 @@ export const env = createEnv({
     SUPABASE_URL: z.string().url(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
     CLERK_SECRET_KEY: z.string().min(1),
-    ADMIN_EMAILS: z.string().min(1),
   },
 
   client: {
@@ -33,7 +32,6 @@ export const env = createEnv({
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-    ADMIN_EMAILS: process.env.ADMIN_EMAILS,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
